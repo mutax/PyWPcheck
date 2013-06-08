@@ -20,13 +20,13 @@
 
 """PyWPcheck by Florian Streibelt <pywpcheck@f-streibelt.de>"""
 
-
 import ConfigParser,argparse,logging,sys
 
 config = ConfigParser.ConfigParser()
 logger = logging.getLogger('') # must be the root logger initially
 
 def main():
+	"""  the real work is done in pywplib/check.py - nothing to see here..."""
 	global config
 	global logger
 
@@ -127,6 +127,7 @@ def main():
 	if args.debug:
 		logger.info('Loglevel was set to %s using the commandline' % args.debug)
 
+	# now we are setup. start working. after 130 locs..
 	from pywplib.check import pywpcheck
 	pywpcheck(config)
 
