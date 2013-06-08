@@ -253,8 +253,9 @@ def pywpcheck(config):
 		s_u_plugins = None
 
 		try:
-			url  = wpsql_get_option(con,'siteurl',prefix=site.tableprefix)
-			name = wpsql_get_option(con,'blogname',prefix=site.tableprefix)
+			url    = wpsql_get_option(con,'siteurl',prefix=site.tableprefix)
+			email  = wpsql_get_option(con,'admin_email',prefix=site.tableprefix)
+			name   = wpsql_get_option(con,'blogname',prefix=site.tableprefix)
 			s_u_core    = wpsql_get_option(con,'_site_transient_update_core'    ,prefix=site.tableprefix)
 			s_u_themes  = wpsql_get_option(con,'_site_transient_update_themes'  ,prefix=site.tableprefix)
 			s_u_plugins = wpsql_get_option(con,'_site_transient_update_plugins' ,prefix=site.tableprefix)
@@ -300,6 +301,10 @@ def pywpcheck(config):
 
 		print
 		underline("Report for site '%s'" %site.name,'=')
+		print "   - Address: %s" % url
+		print "   - Admin Email: %s" % email
+		print
+
 		underline("Core")
 
 		core_error=False
