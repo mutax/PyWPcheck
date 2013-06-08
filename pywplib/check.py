@@ -225,7 +225,7 @@ def underline(text,underline='-'):
 
 
 def pywpcheck(config):
-
+	""" The main working area - be warned, at some point I gave up"""
 	wpsites = set()
 	wpsections = getWPSitesFromConfig(config)
 
@@ -248,6 +248,9 @@ def pywpcheck(config):
 
 	for site in wpsites:
 		con = mysqlconnect(site)
+		s_u_core    = None
+		s_u_themes  = None 
+		s_u_plugins = None
 
 		try:
 			url  = wpsql_get_option(con,'siteurl',prefix=site.tableprefix)
@@ -264,29 +267,28 @@ def pywpcheck(config):
 
 		con.close()
 
-		logger.info("Site '%s' at %s" % (name,url))
-
-		if not s_u_core:
-			logger.error("No information on Wordpress Core updates for %s (%s)" % (name,url))
-		if not s_u_themes:
-			logger.error("No information on Wordpress Theme updates for %s (%s)" % (name,url))
-		if not s_u_plugins:
-			logger.error("No information on Wordpress Plugin updates for %s (%s)" % (name,url))
-
 		c_age=p_age=t_age=-1
-
 		limit = 60*60*24
+
+		logger.info("Site '%s' at %s" % (name,url))
 
 		if s_u_core:
 			c_age,core_version,core_updates =  parse_core_to_dict(s_u_core)
-
-		if s_u_plugins:
-			p_age,p_checked,p_updates    =  parse_plugins_to_dict(s_u_plugins)
+		else:
+			logger.error("No information on Wordpress Core updates for %s (%s)" % (name,url))
 
 		if s_u_themes:
 			t_age,t_checked,t_updates    =  parse_themes_to_dict(s_u_themes)
+		else:
+			logger.error("No information on Wordpress Theme updates for %s (%s)" % (name,url))
+
+		if s_u_plugins:
+			p_age,p_checked,p_updates    =  parse_plugins_to_dict(s_u_plugins)
+		else:
+			logger.error("No information on Wordpress Plugin updates for %s (%s)" % (name,url))
 
 
+		# warning, below it really gets ugly....
 
 
 		if c_age > limit or p_age > limit or t_age > limit:
@@ -298,7 +300,6 @@ def pywpcheck(config):
 
 		print
 		underline("Report for site '%s'" %site.name,'=')
-
 		underline("Core")
 
 		core_error=False
@@ -306,11 +307,14 @@ def pywpcheck(config):
 		if not s_u_core:
 			print "   - NOT checked - no data!"
 			core_error=True
+
 		if c_age > limit:
 			print "   - check is outdated: Last check was %.0f seconds ago!" % c_age
 			core_error=True
 
+
 		if s_u_core:
+			# Okay, we have core data, lets try to check them
 
 			logger.info("Site %s running at Wordpress %s" % (site.name,core_version))
 			print "   - Version running: %s" % core_version
@@ -349,8 +353,6 @@ def pywpcheck(config):
 
 		plugin_error=False
 
-
-
 		if not s_u_plugins:
 			print "   - NOT checked - no data!"
 			plugin_error=True
@@ -359,10 +361,13 @@ def pywpcheck(config):
 			plugin_error=True
 
 		if s_u_plugins:
+			# We have plugin data, yay!
 
 			if len(p_checked)==0:
+				# or maybe not...
 				print "   - No Plugins installed"
 
+			#items() is a copy, so we can remove elements in the end
 			for plugin,version in p_checked.items():
 				logger.info( "Site %s: found plugin %s, version %s" % (site.name, plugin,version) )
 
@@ -378,6 +383,7 @@ def pywpcheck(config):
 						print "   -> No update available or no auto update."
 					del(p_updates[plugin])
 
+			#make sure we did not miss anything
 			for plugin,data in p_updates.items():
 
 				print "   - Plugin %s - Version unknown!" % (plugin)
@@ -405,7 +411,8 @@ def pywpcheck(config):
 				print "   - No themes installed"
 
 
-			for theme,version in t_checked.iteritems():
+			#items() is a copy, so we can remove elements in the end
+			for theme,version in t_checked.items():
 				logger.info( "Site %s: found theme %s, version %s" % (site.name, theme,version) )
 
 				print "   - Theme  %s - Version %s" % (theme,version)
@@ -420,16 +427,15 @@ def pywpcheck(config):
 						print "   -> No update available or no auto update." 
 					del(t_updates[theme])
 
-			for theme,data in t_updates.items():
+			# for some reason I found plugins here that are not mentioned in the other 
+			# deserialzed php opject...
 
+			for theme,data in t_updates.items():
 				print "   - Theme %s - Version unknown!" % (plugin)
 				theme_error=True
 				if 'new_version' in data:
 					new_version=data['new_version']
 					print "   -> Update on %s available!" % (new_version)
-
-
-
 
 
 		print
@@ -450,7 +456,6 @@ def pywpcheck(config):
 			print " ERROR: Site %s is running outdated themes or a check failed. " % site.name
 		else:
 			print " OK: Site %s is running the latest Wordpress Themes. " % site.name
-
 
 		print
 
