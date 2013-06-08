@@ -31,3 +31,10 @@ more crazyness:
 I had the plan to add a notification system so nagios/icinga can get the check results of the script or similar. 
 
 You could already execute the script as cgi if you make sure the config path is outside the document root and check via nagios daily if the string ERROR occurs. (htaccess should be put in front)
+
+
+Future ideas:
+-------------
+
+If I have too muich time an automated email to the admin configured in the database could be an idea as well as setting the timeout for the cron check per site in the settings.
+
