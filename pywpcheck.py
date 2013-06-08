@@ -82,12 +82,23 @@ def main():
 
 	loglevel_cons=None
 	loglevel_cons_num=logging.NOTSET
+	consolelogging=True
 
 	if args.debug:
 		loglevel_cons=args.debug
 	else:
 		try:
 			loglevel_cons=config.get("log:console","level")
+
+			try:
+				# allow disabling of logging to stdout
+				enabled = config.get("log:console","enabled").strip().upper()
+				if enabled != 'YES' and enabled != 'TRUE':
+					loglevel_cons=None
+					consolelogging=False
+			except:
+				pass
+
 		except ConfigParser.NoSectionError:
 			pass
 
@@ -98,19 +109,26 @@ def main():
 			raise ValueError('Invalid console loglevel: %s' % loglevel_cons)
 
 
-	stderr_log_handler = logging.StreamHandler()
-	stderr_log_handler.setFormatter(formatter)
-	stderr_log_handler.setLevel(loglevel_cons_num)
-	logger.addHandler(stderr_log_handler)
+	if consolelogging:
+		stderr_log_handler = logging.StreamHandler()
+		stderr_log_handler.setFormatter(formatter)
+		stderr_log_handler.setLevel(loglevel_cons_num)
+		logger.addHandler(stderr_log_handler)
+
+	if len(logger.handlers)==0:
+		# as adviced when we don't want the
+		# No hndler found error...
+		logger.addHandler(logging.NullHandler())
 
 	logger.debug("configured.")
 	logger = logging.getLogger("PyWPcheck")
 	logger.debug("switched logger.")
 
 	if args.debug:
-		logging.info('Loglevel was set to %s using the commandline' % args.debug)
+		logger.info('Loglevel was set to %s using the commandline' % args.debug)
 
-
+	from pywplib.check import pywpcheck
+	pywpcheck(config)
 
 if __name__ == '__main__':
 	try:
