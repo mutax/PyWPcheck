@@ -408,7 +408,7 @@ def pywpcheck(config):
 			theme_error=True
 		if t_age > limit:
 			print "   - check is outdated: Last check was %.0f seconds ago!" % t_age
-			core_error=True
+			theme_error=True
 
 		if s_u_themes:
 
